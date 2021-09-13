@@ -1,0 +1,3 @@
+C:/Users/Ana/ClionProjects/file-writing/002_Task2/cmake-build-debug/CMakeFiles/002_Task2.dir
+C:/Users/Ana/ClionProjects/file-writing/002_Task2/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Ana/ClionProjects/file-writing/002_Task2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
