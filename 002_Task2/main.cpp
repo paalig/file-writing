@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <ctime>
 
 /*
  * С помощью генератора случайных чисел рисуется картинка из нулей и единиц.
@@ -12,8 +14,29 @@
  * Эта операция задаёт начальное зерно случайных чисел в зависимости от текущего времени.
  * Для её корректной работы не забудьте также включить заголовочный файл <ctime>.
  */
+bool CheckNumber(int a) {
+    return a > 0;
+}
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+    std::srand(std::time(nullptr));
+    std::ofstream file("C:\\Users\\Ana\\ClionProjects\\file-writing\\002_Task2\\pic.txt", std::ios::app);
+    int height, width;
+
+    std::cout << "Input picture height: " << std::endl;
+    std::cin >> height;
+    std::cout << "Input picture width: " << std::endl;
+    std::cin >> width;
+
+    if (CheckNumber(height) && CheckNumber(width) && file.is_open()) {
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                file << (std::rand() % 2);
+            }
+            file << std::endl;
+        }
+    } else {
+        std::cout << "Wrong input" << std::endl;
+    }
+    file.close();
 }
