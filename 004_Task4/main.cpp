@@ -25,13 +25,13 @@ std::vector<int> money; // вектор с купюрами
 int banknote[6] = {100, 200, 500, 1000, 2000, 5000}; // перечень банкнот
 bool status = true; // статус корректности пользовательского ввода, открытия файлов и т.д.
 
-void InitMoney() { // создание вектора с купюрами
-    for (int i = 0; i < 10; i++) {
+void InitMoney() { // создание исходного вектора с купюрами
+    for (int i = 0; i < 1000; i++) {
         money.push_back(banknote[rand() % 6]);
     }
 }
 
-void WriteBankFile() { // запись исходного вектора с купюрами в файл
+void WriteBankFile() { // запись вектора с купюрами в файл
     std::string answer = "Y";
     std::ofstream out_file("..\\bank.bin", std::ios::binary);
     if (out_file.is_open()) {
@@ -66,7 +66,7 @@ bool CheckCash(int a) { // проверка введенной суммы
     return ((a % 100 == 0) && (a >= 100));
 }
 
-std::vector<int> CreateCashVector(int a, int i = 5) { //создание вектора с перечнем банкнот
+std::vector<int> CreateCashVector(int a, int i = 5) { // создание вектора с перечнем банкнот
     std::vector<int> vec;
     while (a != 0 && i >= 0) {
         int count = a / banknote[i];
@@ -80,70 +80,81 @@ std::vector<int> CreateCashVector(int a, int i = 5) { //создание век�
     return vec;
 }
 
-void Deposit(std::vector<int> vec) { // взнос наличных
-    std::ifstream read_file;
-    read_file.open("..\\bank.bin", std::ios::binary);
-    std::ofstream write_file("..\\bank.bin", std::ios::binary);
+int VectorSum(std::vector<int> vec) { // расчет суммы вектора
+    int sum = 0;
+    for (int i = 0; i < vec.size(); i++) {
+        sum += vec[i];
+    }
+    return sum;
+}
 
-    if (!read_file.is_open() || !write_file.is_open()) {
-        std::cout << "Opening bank file error" << std::endl;
-        status = false;
-    } else {
-        int m = vec.size() - 1;
-        while (!read_file.eof() && m >= 0) {
-            int currentBanknote;
-            read_file >> currentBanknote;
-            if (currentBanknote == 0) {
-                write_file << vec[m];
-                vec[m] = 0;
-                m--;
+int VectorMin(std::vector<int> vec) { // поиск минимума вектора
+    int min = 5000;
+    for (int i = 0; i < vec.size(); i++) {
+        if (vec[i] != 0 && vec[i] < min) {
+            min = vec[i];
+        }
+        if (min == 100) {
+            break;
+        }
+    }
+    return min;
+}
+
+void Deposit(std::vector<int> vec) { // взнос наличных
+
+    for (int i = 0; i < vec.size(); i++) {
+        bool replace = true;
+        for (int j = 0; j < money.size() && replace; j++) {
+            if (vec[i] == money[j]) {
+                money[i] = vec[i];
+                replace = false;
             }
         }
-        std::cout << "Your money is on deposit" << std::endl;
     }
-    read_file.close();
-    write_file.close();
+    WriteBankFile();
+    std::cout << "Your money is on deposit" << std::endl;
 }
 
 void Withdrawal(std::vector<int> vec) { // снятие наличных
-    std::ifstream read_file;
-    read_file.open("..\\bank.bin", std::ios::binary);
-    char buffer[10];
-    //std::ofstream write_file("..\\bank.bin", std::ios::binary);
+    int pos = 0;
+    int range = vec.size() - 1;
+    while (!vec.empty() && pos <= range) {
+        bool replace = true;
+        for (int i = 0; i < money.size() && replace; i++) {
+            if (vec[pos] == money[i]) {
+                money[i] = 0;
+                vec[pos] = 0;
+                pos++;
+                replace = false;
+            }
+            if (i == money.size() - 1) {
+                pos++;
+            }
+        }
+    }
 
-    if (!read_file.is_open()) {
-        std::cout << "Opening bank file error" << std::endl;
-        status = false;
+    int sum = 0;
+    int max = 0;
+    for (int i = 0; i < vec.size(); i++) {
+        sum += vec[i];
+        if (vec[i] > max) {
+            max = vec[i];
+        }
+    }
+
+    if (!vec.empty() && sum != 0 && max > 100) {
+        int m;
+        for (int i = 5; i >= 0; i--) {
+            if (banknote[i] == max) {
+                m = i - 1;
+            }
+        }
+        Withdrawal(CreateCashVector(sum,m));
     } else {
-        while (!read_file.eof() && !vec.empty()) {
-            read_file.read(buffer, sizeof(int));
-            if (std::stoi(buffer) == vec[0]) {
-                std::ofstream write_file("..\\bank.bin", std::ios::binary);
-                write_file << "0";
-                std::remove(reinterpret_cast<const char *>(vec[0]));
-                write_file.close();
-            }
-        }
-        if (!vec.empty()) {
-            int sum = 0;
-            int max = 0;
-            for (int i = 0; i < vec.size(); i++) {
-                sum += vec[i];
-                if (vec[i] > max) {
-                    max = vec[i];
-                }
-            }
-            int m;
-            for (int i = 5; i >= 0; i--) {
-                if (banknote[i] == max) {
-                    m = i;
-                }
-            }
-            Withdrawal(CreateCashVector(sum,m));
-        }
         std::cout << "Take your money" << std::endl;
     }
-    read_file.close();
+    WriteBankFile();
 }
 
 int main() {
@@ -152,7 +163,7 @@ int main() {
     InitMoney();
     WriteBankFile();
 
-    int fullSlot = 10;//1000;
+    int fullSlot = 1000;
     int emptySlot = 0;
     std::string answer = "Y";
     std::string operation;
@@ -171,7 +182,7 @@ int main() {
                     emptySlot -= vec.size();
                     fullSlot += vec.size();
                 } else {
-                    std::cout << "ATM is full" << std::endl;
+                    std::cout << "ATM is full. Impossible to deposit money" << std::endl;
                 }
             } else {
                 std::cout << "Incorrect amount of money" << std::endl;
@@ -181,10 +192,9 @@ int main() {
             std::cout << "Input amount of money for withdrawal:" << std::endl;
             std::cin >> cash;
             if (CheckCash(cash)) {
-                if (CheckSpace(fullSlot, cash)) {
-                    std::vector<int> vec = CreateCashVector(cash);
+                std::vector<int> vec = CreateCashVector(cash);
+                if (CheckSpace(fullSlot, cash) && VectorSum(vec) <= VectorSum(money) && cash >= VectorMin(money)) {
                     Withdrawal(vec);
-                    //
                     emptySlot += vec.size();
                     fullSlot -= vec.size();
                 } else {
